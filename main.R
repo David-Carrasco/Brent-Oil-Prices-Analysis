@@ -1,7 +1,6 @@
 library(quantmod)
-
-# a que ahora si ?
-
 library(ggplot2)
 
-# nueva prueba de actualizacion
+# Carga data barril brent
+getSymbols('DCOILBRENTEU', src='FRED')
+plot(DCOILBRENTEU)
