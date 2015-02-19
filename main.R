@@ -20,7 +20,7 @@ precioAnyo <- ddply(precioCombust, c("ANYO", "GASOLINA"), summarise, PrecioMedio
 #        summarise(medio = mean(PRECIO))
 
 #Funcion para obtener como objeto Date todas las fechas del dataset precioCombust
-createDate <- function(anios, meses){
+createDate <- function(anio, mes){
   date_month <- ifelse(nchar(mes) == 1, paste(anio, mes, sep='-0'), paste(anio, mes, sep='-'))
   return(as.Date(paste(date_month, c('01'), sep='-'), format="%Y-%m-%d"))
 }
@@ -41,8 +41,11 @@ df.brent <- data.frame(fecha = format(index(brent_monthly), "%Y-%m"),
 #Concatenamos df.brent bajo combustible con el tipo brent
 df.total <- rbind(combustibles, df.brent)
 
+
+
+
 #Ejemplo chart 3 precios a la vez
-#chart1 <- ggplot(df.brent.oil, aes(fecha, PrecioMedio, shape = GASOLINA, colour = GASOLINA)) + layer("line")
+#chart1 <- ggplot(df.total, aes(fecha, precio, shape = tipo, colour = tipo)) + layer("line")
 
 
 ##################################  GRAFICAS ###########################################
