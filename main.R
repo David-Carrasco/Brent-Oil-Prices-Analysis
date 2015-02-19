@@ -28,21 +28,21 @@ createDate <- function(anios, meses){
 #creamos dataset con la fecha correcta del dataset precioCombust
 #con formato aaaa-mm
 combustibles <- data.frame(fecha = format(createDate(precioCombust$ANYO, precioCombust$MES), "%Y-%m"),
-                           tipo_gasolina = precioCombust$GASOLINA,
+                           tipo = precioCombust$GASOLINA,
                            precio = precioCombust$PRECIO)
 
 #Agrupamos mensualmente el dataset del Brent y lo filtramos
 #desde el primer mes del 2000 hasta ahora y formateamos la fecha en formato aaaa-mm 
-brent_monthly <- monthlyReturn(DCOILBRENTEU, subset='2000::')
+brent_monthly <- to.monthly(DCOILBRENTEU['2000::'])[,c(4)]
 df.brent <- data.frame(fecha = format(index(brent_monthly), "%Y-%m"),
-                       cotizacion = coredata(brent_monthly)[,1])
+                       tipo = c('brent'),
+                       precio = coredata(brent_monthly)[,1])
 
-#Join de ambos datasets por fecha
-df.brent.oil <- plyr::join(combustibles, df.brent, by='fecha', type='full')
+#Concatenamos df.brent bajo combustible con el tipo brent
+df.total <- rbind(combustibles, df.brent)
 
-#NOTA: A la hora de pintar df.brent.oil tener en cuenta que la columna cotizacion es la variacion
-#      mensual del brent con lo cual pintarlo como cumsum cuando se pinte todo el dataframe
-
+#Ejemplo chart 3 precios a la vez
+#chart1 <- ggplot(df.brent.oil, aes(fecha, PrecioMedio, shape = GASOLINA, colour = GASOLINA)) + layer("line")
 
 
 ##################################  GRAFICAS ###########################################
