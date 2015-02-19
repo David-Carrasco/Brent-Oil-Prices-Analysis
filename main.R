@@ -31,6 +31,7 @@ combustibles <- data.frame(fecha = format(createDate(precioCombust$ANYO, precioC
                            tipo = precioCombust$GASOLINA,
                            precio = precioCombust$PRECIO)
 
+
 #Agrupamos mensualmente el dataset del Brent y lo filtramos
 #desde el primer mes del 2000 hasta ahora y formateamos la fecha en formato aaaa-mm 
 brent_monthly <- to.monthly(DCOILBRENTEU['2000::'])[,c(4)]
@@ -40,13 +41,6 @@ df.brent <- data.frame(fecha = format(index(brent_monthly), "%Y-%m"),
 
 #Concatenamos df.brent bajo combustible con el tipo brent
 df.total <- rbind(combustibles, df.brent)
-
-
-
-
-#Ejemplo chart 3 precios a la vez
-#chart1 <- ggplot(df.total, aes(fecha, precio, shape = tipo, colour = tipo)) + layer("line")
-
 
 ##################################  GRAFICAS ###########################################
 
@@ -58,7 +52,27 @@ print(grafica1)
 grafica2 <- ggplot(precioAnyo, aes(ANYO,PrecioMedio, shape = GASOLINA, colour = GASOLINA)) + layer("line")
 print(grafica2)
 
+
+grafica3 <- ggplot(df.total, aes(fecha,precio, shape = tipo, colour = tipo)) + layer("line")
+print(grafica3)
+
+
+
 # En grafico de barras (lo tengo que hacer bien, da un error que no llego a ver)
 b <- ggplot(precioAnyo, aes(x = ANYO, y = PrecioMedio), shape = GASOLINA)
 b + geom_bar()
 
+# Grafico de puntos y lineas con las 3 variables
+ggplot(df.total, aes(fecha, precio)) +
+  geom_point(aes(size=3, colour = tipo)) + geom_line()
+
+# Grafico de dispersion con la 3 variables (con line no llega a funcionar)
+ggplot(df.total, aes(fecha, precio,
+                     colour=tipo)) + geom_jitter() + facet_grid(tipo~., scale="free_y")
+
+ggplot(df.total, aes(x=fecha, y=precio,
+                     colour=tipo)) + layer(geom ="point") + facet_grid(tipo~., scale="free_y")
+
+
+# Este tipo de grafico estaria bien si saliera..
+ggplot(df.total, aes(fecha, precio)) + stat_binhex() + theme_minimal() + facet_grid(tipo~., scale="free_y")
