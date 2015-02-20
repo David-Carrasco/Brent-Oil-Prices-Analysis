@@ -9,7 +9,7 @@ getSymbols('DCOILBRENTEU', src='FRED')
 plot(DCOILBRENTEU)
 
 # Carga datos Gasolina 95 y Gasoleo A de 2000 a 2015
-precioCombust <- fread("precio_combustible.csv", header = TRUE)
+precioCombust <- read.csv('precio_combustible.csv', header = T, sep = ';')
 
 # Agrupado por año y gasolina en función del precio medio en ese rango
 precioAnyo <- ddply(precioCombust, c("ANYO", "GASOLINA"), summarise, PrecioMedio = mean(PRECIO))
@@ -76,3 +76,6 @@ ggplot(df.total, aes(x=fecha, y=precio,
 
 # Este tipo de grafico estaria bien si saliera..
 ggplot(df.total, aes(fecha, precio)) + stat_binhex() + theme_minimal() + facet_grid(tipo~., scale="free_y")
+
+# Facet con grafica de los 3 tipos divididos
+ggplot(df.total, aes(fecha, precio,colour=tipo)) + geom_line(aes(group = tipo)) + facet_grid(tipo~., scale="free_y")
