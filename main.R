@@ -4,7 +4,7 @@ library(plyr)
 library(grid)
 library(gridExtra)
 library(scales)
-library(gdata)
+library(xlsx)
 library(rgdal)
 library(sp)
 
@@ -78,10 +78,8 @@ cor(combustibles[combustibles$tipo == 'GASOLEO_A', c('precio')], df.brent$precio
 #Con el fichero descargado con los datos,
 #creamos el dataframe y limpiamos los datos
 #Fuente: http://geoportalgasolineras.es/
-gasolineras.madrid <- read.csv('gasolineras_madrid_23022015.csv', 
-                               header = TRUE,
-                               stringsAsFactors = FALSE,
-                               sep = ';')
+gasolineras.madrid <- read.xlsx('gasolineras_SHP_23022015.xlsx', 1)
+
 #Leyenda
 
 #Venta  
@@ -91,6 +89,8 @@ gasolineras.madrid <- read.csv('gasolineras_madrid_23022015.csv',
 #Remisión (Rem.):	
 ##dm: Datos procedentes del distribuidor minorista.
 ##OM: Datos procedentes del operador mayorista.
+
+
 
 
 
