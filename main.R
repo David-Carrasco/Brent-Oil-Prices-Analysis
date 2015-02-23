@@ -6,6 +6,7 @@ library(gridExtra)
 library(scales)
 library(xlsx)
 library(rgdal)
+library(gdata)
 library(sp)
 
 # Carga data barril brent
@@ -78,7 +79,7 @@ cor(combustibles[combustibles$tipo == 'GASOLEO_A', c('precio')], df.brent$precio
 #Con el fichero descargado con los datos,
 #creamos el dataframe y limpiamos los datos
 #Fuente: http://geoportalgasolineras.es/
-gasolineras.madrid <- read.xlsx('gasolineras_SHP_23022015.xlsx', 1)
+gasolineras.madrid <- read.xls('PRECIOS_SHP_23022015.xls', sheet = 'datos', header = TRUE)
 
 #Leyenda
 
@@ -97,4 +98,19 @@ gasolineras.madrid <- read.xlsx('gasolineras_SHP_23022015.xlsx', 1)
 ####################### REPRESENTACION CON SHAPEFILE #########################################
 
 municipios <- readOGR(dsn = ".", layer = "municipios")
+plot(municipios)
+
+# para ver los datos del shp;
+
+municipios@data  # el campo GEODATA mantiene el "0" a la izquierda.
+
+# se carga el precio medio de gasolina y gasoleo por Municipios de Madrid
+precMedio.gasolina <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, stringsAsFactors=FALSE)
+precMedio.gasoleo <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasoleo", header = TRUE, stringsAsFactors=FALSE)
+
+# Se hace la union entre el SHP y los datos, por el campo "GEOCODIGO" que tienen en comun.
+# Union del SHP con los datos del precio medio de la gasolina:
+
+municipios@data = data.frame(municipios@data, precMedio.gasolina[match(municipios@data[,"GEOCODIGO"], precMedio.gasolina[,"GEOCODIGO"]),])
+
 plot(municipios)
