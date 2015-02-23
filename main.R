@@ -4,6 +4,7 @@ library(plyr)
 library(grid)
 library(gridExtra)
 library(scales)
+library(gdata)
 
 # Carga data barril brent
 getSymbols('DCOILBRENTEU', src='FRED')
@@ -57,3 +58,40 @@ graficaBrent <- ggplot(df.brent, aes(fecha, precio, shape = tipo, colour = tipo)
   scale_x_date(labels = date_format("%Y-%b"), breaks = "3 month")
 
 grid.arrange(graficaGasolina, graficaBrent, ncol=1) 
+
+############################## CORRELACIONES ################################
+
+cor(combustibles[combustibles$tipo == 95, c('precio')], df.brent$precio)
+cor(combustibles[combustibles$tipo == 'GASOLEO_A', c('precio')], df.brent$precio)
+
+# Parece que hay más correlación entre el diesel y el brent que con el gasoil 95 históricamente
+
+
+########################### ANALISIS PRECIO GASOLINA EN MADRID ##########################
+
+# Vamos a analizar los precios de ambos combustibles en Madrid y
+# determinar las zonas más baratas de media donde repostar
+# junto con la marca más barata en dichas zonas
+
+#Con el fichero descargado con los datos,
+#creamos el dataframe y limpiamos los datos
+#Fuente: http://geoportalgasolineras.es/
+gasolineras.madrid <- read.csv('gasolineras_madrid_23022015.csv', 
+                               header = TRUE,
+                               stringsAsFactors = FALSE,
+                               sep = ';')
+#Leyenda
+
+#Venta  
+##P: Venta al público en general.
+##R: Venta restringida a socios o 
+
+#Remisión (Rem.):	
+##dm: Datos procedentes del distribuidor minorista.
+##OM: Datos procedentes del operador mayorista.
+
+
+
+
+
+
