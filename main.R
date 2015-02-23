@@ -4,6 +4,8 @@ library(plyr)
 library(grid)
 library(gridExtra)
 library(scales)
+library(rgdal)
+library(sp)
 
 # Carga data barril brent
 getSymbols('DCOILBRENTEU', src='FRED')
@@ -57,3 +59,9 @@ graficaBrent <- ggplot(df.brent, aes(fecha, precio, shape = tipo, colour = tipo)
   scale_x_date(labels = date_format("%Y-%b"), breaks = "3 month")
 
 grid.arrange(graficaGasolina, graficaBrent, ncol=1) 
+
+
+####################### REPRESENTACIO CON SHAPEFILE #########################################
+
+municipios <- readOGR(dsn = ".", layer = "municipios")
+plot(municipios)
