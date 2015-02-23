@@ -5,6 +5,8 @@ library(grid)
 library(gridExtra)
 library(scales)
 library(gdata)
+library(rgdal)
+library(sp)
 
 # Carga data barril brent
 getSymbols('DCOILBRENTEU', src='FRED')
@@ -92,6 +94,7 @@ gasolineras.madrid <- read.csv('gasolineras_madrid_23022015.csv',
 
 
 
+####################### REPRESENTACION CON SHAPEFILE #########################################
 
-
-
+municipios <- readOGR(dsn = ".", layer = "municipios")
+plot(municipios)
