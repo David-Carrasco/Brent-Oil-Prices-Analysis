@@ -98,19 +98,41 @@ gasolineras.madrid <- read.xls('PRECIOS_SHP_23022015.xls', sheet = 'datos', head
 ####################### REPRESENTACION CON SHAPEFILE #########################################
 
 municipios <- readOGR(dsn = ".", layer = "municipios")
+
 plot(municipios)
 
 # para ver los datos del shp;
 
-municipios@data  # el campo GEODATA mantiene el "0" a la izquierda.
+municipios@data  # el campo GEOCODIGO mantiene el "0" a la izquierda.
 
 # se carga el precio medio de gasolina y gasoleo por Municipios de Madrid
-precMedio.gasolina <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, stringsAsFactors=FALSE)
-precMedio.gasoleo <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasoleo", header = TRUE, stringsAsFactors=FALSE)
+
+precMedio.gasoleo <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasoleo", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),stringsAsFactors=FALSE)
+DatosGasoleo <- precMedio.gasoleo[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
+
+precMedio.gasolina <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),  stringsAsFactors=FALSE)
+DatosGasolina <- precMedio.gasolina[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
 
 # Se hace la union entre el SHP y los datos, por el campo "GEOCODIGO" que tienen en comun.
 # Union del SHP con los datos del precio medio de la gasolina:
 
-municipios@data = data.frame(municipios@data, precMedio.gasolina[match(municipios@data[,"GEOCODIGO"], precMedio.gasolina[,"GEOCODIGO"]),])
+municipios@data = data.frame(municipios@data, DatosGasolina[match(municipios@data[,"GEOCODIGO"], DatosGasolina[,"GEOCODIGO"]),])
 
-plot(municipios)
+# ahora uno con los datos de gasoleo
+municipios@data = data.frame(municipios@data, DatosGasoleo[match(municipios@data[,"GEOCODIGO"], DatosGasoleo[,"GEOCODIGO"]),])
+
+# Creo una nueva clase S4 con la anterior union entre los datos
+datosPlot <- municipios
+
+datosPlot$PrecioGasoleo[datosPlot$PrecioGasoleo == "NA"] <- "0"
+datosPlot$PrecioGasoleo[datosPlot$PrecioGasolina == "NA"] <- "0"
+
+# Compruebo el resultado
+View(datosPlot)
+
+##### cambiar los valores NA por 0 para poder representar, sino, no lo hace.
+
+#plot(datosPlot[datosPlot$PrecioGasolina > 1.10, ], col="blue")
+
+
+
