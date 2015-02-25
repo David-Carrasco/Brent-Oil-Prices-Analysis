@@ -11,7 +11,6 @@ library(sp)
 
 # Carga data barril brent
 getSymbols('DCOILBRENTEU', src='FRED')
-plot(DCOILBRENTEU)
 
 # Carga datos Gasolina 95 y Gasoleo A de 2000 a 2015
 precioCombust <- read.csv('precio_combustible.csv', header = T, sep = ';')
@@ -72,14 +71,18 @@ cor(combustibles[combustibles$tipo == 'GASOLEO_A', c('precio')], df.brent$precio
 
 ########################### ANALISIS PRECIO GASOLINA EN MADRID ##########################
 
-# Vamos a analizar los precios de ambos combustibles en Madrid y
-# determinar las zonas más baratas de media donde repostar
-# junto con la marca más barata en dichas zonas
+# Vamos a analizar los precios de los combustibles en Madrid
+# mediante un mapa de calor para cada tipo
 
-#Con el fichero descargado con los datos,
-#creamos el dataframe y limpiamos los datos
+#Con el fichero descargado con los datos de ambos combustibles,
+#creamos el dataframe
 #Fuente: http://geoportalgasolineras.es/
-gasolineras.madrid <- read.xls('PRECIOS_SHP_23022015.xls', sheet = 'datos', header = TRUE)
+
+precMedio.gasoleo <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasoleo", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),stringsAsFactors=FALSE)
+DatosGasoleo <- precMedio.gasoleo[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
+
+precMedio.gasolina <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),  stringsAsFactors=FALSE)
+DatosGasolina <- precMedio.gasolina[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
 
 #Leyenda
 
@@ -91,28 +94,8 @@ gasolineras.madrid <- read.xls('PRECIOS_SHP_23022015.xls', sheet = 'datos', head
 ##dm: Datos procedentes del distribuidor minorista.
 ##OM: Datos procedentes del operador mayorista.
 
-
-
-
-
-####################### REPRESENTACION CON SHAPEFILE #########################################
-
+#Cargamos el shapefile con los datos geoespaciales de los municipios de Madrid
 municipios <- readOGR(dsn = ".", layer = "municipios")
-
-plot(municipios)
-
-# para ver los datos del shp;
-
-municipios@data  # el campo GEOCODIGO mantiene el "0" a la izquierda.
-
-# se carga el precio medio de gasolina y gasoleo por Municipios de Madrid
-
-precMedio.gasoleo <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasoleo", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),stringsAsFactors=FALSE)
-DatosGasoleo <- precMedio.gasoleo[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
-
-precMedio.gasolina <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),  stringsAsFactors=FALSE)
-DatosGasolina <- precMedio.gasolina[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
-
 
 ########################## FORTIFY DEL DATAFRAME ############################################
 
@@ -125,22 +108,26 @@ municipios.df <- join(municipios.df, municipios@data, by="id")
 municipios.df <- join(municipios.df, DatosGasolina, by = c('GEOCODIGO'), type = "inner")
 municipios.df <- join(municipios.df, DatosGasoleo, by = c('GEOCODIGO', 'Localidad', 'Provincia'), type = 'inner')
 
-######################### PLOT DE PRECIOS DE GASOLINA  #################################
+######################### GGPLOT PRECIOS DE GASOLINA  #################################
 
-ggp <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
-ggp <- ggp + geom_polygon(aes(fill = PrecioGasolina))         # draw polygons
-ggp <- ggp + geom_path(color="grey", linestyle=2)# draw boundaries
-ggp <- ggp + coord_equal()
-ggp <- ggp + scale_fill_gradient(low = "#ffffcc", high = "#ff4444", space = "Lab", na.value = "grey50", guide = "colourbar")
+plotGasolina <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
+plotGasolina <- plotGasolina + geom_polygon(aes(fill = PrecioGasolina))     # draw polygons
+plotGasolina <- plotGasolina + theme(legend.position = "bottom", axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank())
+plotGasolina <- plotGasolina  + labs(title="Precio medio Gasolina 95 por municipio")
+#plotGasolina <- plotGasolina + geom_path(color="grey", linestyle=2) # draw boundaries
+plotGasolina <- plotGasolina + coord_equal()
+plotGasolina <- plotGasolina + scale_fill_gradient(low = "#F5FBEF", high = "#38610B", space = "Lab", na.value = "grey50", guide = "colourbar")
 
-print(ggp)
+######################### GGPLOT PRECIOS DE GASOLEO  #################################
 
-######################### PLOT DE PRECIOS DE GASOLEO  #################################
+plotGasoleo <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
+plotGasoleo <- plotGasoleo + geom_polygon(aes(fill = PrecioGasoleo))         # draw polygons
+plotGasoleo <- plotGasoleo + theme(legend.position = "bottom", axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank())
+plotGasoleo <- plotGasoleo  + labs(title="Precio medio Gasoleo A por municipio")
+#plotGasoleo <- plotGasoleo + geom_path(color="grey", linestyle=2)# draw boundaries
+plotGasoleo <- plotGasoleo + coord_equal()
+plotGasoleo <- plotGasoleo + scale_fill_gradient(low = "#FBEFEF", high = "#610B0B", space = "Lab", na.value = "grey50", guide = "colourbar")
 
-ggp <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
-ggp <- ggp + geom_polygon(aes(fill = PrecioGasoleo))         # draw polygons
-ggp <- ggp + geom_path(color="grey", linestyle=2)# draw boundaries
-ggp <- ggp + coord_equal()
-ggp <- ggp + scale_fill_gradient(low = "#ffffcc", high = "#ff4444", space = "Lab", na.value = "grey50", guide = "colourbar")
+#Ambos plot dividiendo el grid en 2
+grid.arrange(plotGasolina, plotGasoleo, ncol=2)
 
-print(ggp)
