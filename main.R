@@ -50,7 +50,7 @@ df.total <- rbind(combustibles, df.brent)
 
 graficaGasolina <- ggplot(combustibles, aes(fecha, precio, shape = tipo, colour = tipo)) + 
   geom_line(aes(group = tipo)) + 
-  theme(legend.position = "top", axis.text.x = element_blank(), axis.title.x = element_blank()) + 
+  theme(legend.position = "top", axis.text.x = element_blank(), axis.ticks = element_blank(), axis.title.x = element_blank()) + 
   scale_x_date(labels = date_format("%Y"), breaks = "3 month") 
 
 
@@ -112,7 +112,7 @@ municipios.df <- join(municipios.df, DatosGasoleo, by = c('GEOCODIGO', 'Localida
 
 plotGasolina <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
 plotGasolina <- plotGasolina + geom_polygon(aes(fill = PrecioGasolina))     # draw polygons
-plotGasolina <- plotGasolina + theme(legend.position = "bottom", axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank())
+plotGasolina <- plotGasolina + theme(legend.position = "bottom", axis.ticks = element_blank(), axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank())
 plotGasolina <- plotGasolina  + labs(title="Precio medio Gasolina 95 por municipio")
 #plotGasolina <- plotGasolina + geom_path(color="grey", linestyle=2) # draw boundaries
 plotGasolina <- plotGasolina + coord_equal()
@@ -122,7 +122,7 @@ plotGasolina <- plotGasolina + scale_fill_gradient(low = "#F5FBEF", high = "#386
 
 plotGasoleo <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
 plotGasoleo <- plotGasoleo + geom_polygon(aes(fill = PrecioGasoleo))         # draw polygons
-plotGasoleo <- plotGasoleo + theme(legend.position = "bottom", axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank())
+plotGasoleo <- plotGasoleo + theme(legend.position = "bottom", axis.ticks = element_blank(), axis.text.x = element_blank(), axis.title.x = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank())
 plotGasoleo <- plotGasoleo  + labs(title="Precio medio Gasoleo A por municipio")
 #plotGasoleo <- plotGasoleo + geom_path(color="grey", linestyle=2)# draw boundaries
 plotGasoleo <- plotGasoleo + coord_equal()
