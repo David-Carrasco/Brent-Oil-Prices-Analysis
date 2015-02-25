@@ -113,26 +113,34 @@ DatosGasoleo <- precMedio.gasoleo[,1:5] # Realizo esta seleccion ya que ponia mu
 precMedio.gasolina <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),  stringsAsFactors=FALSE)
 DatosGasolina <- precMedio.gasolina[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
 
-# Se hace la union entre el SHP y los datos, por el campo "GEOCODIGO" que tienen en comun.
-# Union del SHP con los datos del precio medio de la gasolina:
 
-municipios@data = data.frame(municipios@data, DatosGasolina[match(municipios@data[,"GEOCODIGO"], DatosGasolina[,"GEOCODIGO"]),])
+########################## FORTIFY DEL DATAFRAME ############################################
 
-# ahora uno con los datos de gasoleo
-municipios@data = data.frame(municipios@data, DatosGasoleo[match(municipios@data[,"GEOCODIGO"], DatosGasoleo[,"GEOCODIGO"]),])
+municipios@data$id <- rownames(municipios@data)
+municipios.df <- fortify(municipios)
+municipios.df <- join(municipios.df, municipios@data, by="id")
 
-# Creo una nueva clase S4 con la anterior union entre los datos
-datosPlot <- municipios
+########################## JOIN CON LOS PRECIOS ##############################################
 
-datosPlot$PrecioGasoleo[datosPlot$PrecioGasoleo == "NA"] <- "0"
-datosPlot$PrecioGasoleo[datosPlot$PrecioGasolina == "NA"] <- "0"
+municipios.df <- join(municipios.df, DatosGasolina, by = c('GEOCODIGO'), type = "inner")
+municipios.df <- join(municipios.df, DatosGasoleo, by = c('GEOCODIGO', 'Localidad', 'Provincia'), type = 'inner')
 
-# Compruebo el resultado
-View(datosPlot)
+######################### PLOT DE PRECIOS DE GASOLINA  #################################
 
-##### cambiar los valores NA por 0 para poder representar, sino, no lo hace.
+ggp <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
+ggp <- ggp + geom_polygon(aes(fill = PrecioGasolina))         # draw polygons
+ggp <- ggp + geom_path(color="grey", linestyle=2)# draw boundaries
+ggp <- ggp + coord_equal()
+ggp <- ggp + scale_fill_gradient(low = "#ffffcc", high = "#ff4444", space = "Lab", na.value = "grey50", guide = "colourbar")
 
-#plot(datosPlot[datosPlot$PrecioGasolina > 1.10, ], col="blue")
+print(ggp)
 
+######################### PLOT DE PRECIOS DE GASOLINA  #################################
 
+ggp <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
+ggp <- ggp + geom_polygon(aes(fill = PrecioGasoleo))         # draw polygons
+ggp <- ggp + geom_path(color="grey", linestyle=2)# draw boundaries
+ggp <- ggp + coord_equal()
+ggp <- ggp + scale_fill_gradient(low = "#ffffcc", high = "#ff4444", space = "Lab", na.value = "grey50", guide = "colourbar")
 
+print(ggp)
