@@ -135,7 +135,7 @@ ggp <- ggp + scale_fill_gradient(low = "#ffffcc", high = "#ff4444", space = "Lab
 
 print(ggp)
 
-######################### PLOT DE PRECIOS DE GASOLINA  #################################
+######################### PLOT DE PRECIOS DE GASOLEO  #################################
 
 ggp <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) 
 ggp <- ggp + geom_polygon(aes(fill = PrecioGasoleo))         # draw polygons
