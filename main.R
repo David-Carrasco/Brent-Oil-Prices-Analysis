@@ -13,15 +13,7 @@ library(sp)
 getSymbols('DCOILBRENTEU', src='FRED')
 
 # Carga datos Gasolina 95 y Gasoleo A de 2000 a 2015
-precioCombust <- read.csv('precio_combustible.csv', header = T, sep = ';')
-
-# Agrupado por año y gasolina en función del precio medio en ese rango
-precioAnyo <- ddply(precioCombust, c("ANYO", "GASOLINA"), summarise, PrecioMedio = mean(PRECIO))
-
-# Otra forma de hacerlo:
-#      precioAnyo <- precioCombust %>% 
-#        group_by(ANYO, GASOLINA) %>% 
-#        summarise(medio = mean(PRECIO))
+precioCombust <- read.csv('src/precio_combustible.csv', header = T, sep = ';')
 
 #Funcion para obtener como objeto Date todas las fechas del dataset precioCombust
 createDate <- function(anio, mes){
@@ -78,10 +70,10 @@ cor(combustibles[combustibles$tipo == 'GASOLEO_A', c('precio')], df.brent$precio
 #creamos el dataframe
 #Fuente: http://geoportalgasolineras.es/
 
-precMedio.gasoleo <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasoleo", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),stringsAsFactors=FALSE)
+precMedio.gasoleo <- read.xls('src/PRECIOS_SHP_23022015.xls', sheet = "promedio_gasoleo", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),stringsAsFactors=FALSE)
 DatosGasoleo <- precMedio.gasoleo[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
 
-precMedio.gasolina <- read.xls('PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),  stringsAsFactors=FALSE)
+precMedio.gasolina <- read.xls('src/PRECIOS_SHP_23022015.xls', sheet = "promedio_gasolina", header = TRUE, colClasses=c("Provincia"= "character","Localidad"= "character","TIPO"= "character","GEOCODIGO"= "character"),  stringsAsFactors=FALSE)
 DatosGasolina <- precMedio.gasolina[,1:5] # Realizo esta seleccion ya que ponia muchas columnas sin dato a la izquierda de la talba
 
 #Leyenda
@@ -95,7 +87,7 @@ DatosGasolina <- precMedio.gasolina[,1:5] # Realizo esta seleccion ya que ponia 
 ##OM: Datos procedentes del operador mayorista.
 
 #Cargamos el shapefile con los datos geoespaciales de los municipios de Madrid
-municipios <- readOGR(dsn = ".", layer = "municipios")
+municipios <- readOGR(dsn = "src/shapefile", layer = "municipios")
 
 ########################## FORTIFY DEL DATAFRAME ############################################
 
