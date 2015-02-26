@@ -76,7 +76,7 @@ head(combustibles)
 
 Carga de datos del barril brent
 
-```{r message=FALSE, warning=FALSE, eval=FALSE}
+```{r message=FALSE, warning=FALSE, results='hide'}
 getSymbols(brent.barril, src='FRED')
 ```
 
