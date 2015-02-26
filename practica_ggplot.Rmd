@@ -1,0 +1,248 @@
+---
+title: "Practica_ggplot.R"
+author: "Sergio Vázquez - David Carrasco"
+output: html_document
+---
+
+Vamos a llevar a cabo 2 estudios respecto a los precios del carburante en base a:
+
+* Comparación entre los precios de la gasolina (95) y el gasóleo con respecto al barril de Brent
+* Comparativa de precios de ambos combustibles en la comunidad de Madrid mediante mapas de calor
+
+## Carga de librerías
+
+```{r message=FALSE, warning=FALSE}
+library(quantmod)
+library(ggplot2)
+library(plyr)
+library(grid)
+library(gridExtra)
+library(scales)
+library(rgdal)
+library(gdata)
+library(sp)
+```
+
+## Constantes
+
+```{r}
+brent.barril <- 'DCOILBRENTEU'
+precios.combustible.path <- 'src/precio_combustible.csv'
+precios.medios.path <- 'src/PRECIOS_SHP_23022015.xls'
+municipios.path <- 'src/shapefile'
+municipios.shapefile <- 'municipios'
+```
+
+## Funciones
+
+Función para formatear fechas para el dataset precioCombust
+
+```{r}
+createDate <- function(anio, mes){
+  date_month <- ifelse(nchar(mes) == 1, paste(anio, mes, sep='-0'), paste(anio, mes, sep='-'))
+  return(as.Date(paste(date_month, c('01'), sep='-'), format="%Y-%m-%d"))
+}
+```
+
+## Main
+
+# Gasolina 95 y Gasóleo -- Barril Brent 
+
+Carga de datos de la Gasolina 95 y el Gasoleo A del año 2000 al 2015
+
+```{r}
+precioCombust <- read.csv(precios.combustible.path, header = TRUE, sep = ';')
+```
+
+Estructura del dataset precioCombust
+
+```{r}
+head(precioCombust)
+```
+
+Limpiamos el dataset para adaptar la fecha, formateada correctamente con formato aaaa-mm-dd, en una única columna
+
+```{r}
+combustibles <- data.frame(fecha = createDate(precioCombust$ANYO, precioCombust$MES),
+                           tipo = precioCombust$GASOLINA,
+                           precio = precioCombust$PRECIO)
+```
+
+Muestra del dataset combustibles
+
+```{r}
+head(combustibles)
+```
+
+Carga de datos del barril brent
+
+```{r message=FALSE, warning=FALSE, eval=FALSE}
+getSymbols(brent.barril, src='FRED')
+```
+
+Muestra del dataset del precio del barril de Brent ($)
+
+```{r}
+head(DCOILBRENTEU)
+```
+
+Agrupamos mensualmente el dataset del Brent tomando como referencia el precio de cierre
+
+```{r warning=FALSE}
+brent_monthly <- to.monthly(DCOILBRENTEU['2000::'])[,c(4)]
+```
+
+Filtramos desde el primer mes del 2000 hasta ahora y formateamos la fecha en formato aaaa-mm-dd
+
+```{r}
+df.brent <- data.frame(fecha = as.Date(format(index(brent_monthly), "%Y-%m-%d")),
+                       tipo = c('brent'), 
+                       precio = coredata(brent_monthly)[,1])
+```
+
+Muestra de df.brent
+
+```{r}
+head(df.brent)
+```
+
+Concatenamos df.brent bajo combustible para tener todos los tipos en un dataframe
+
+```{r}
+df.total <- rbind(combustibles, df.brent)
+```
+
+# Gráfica
+
+```{r}
+graficaGasolina <- ggplot(combustibles, aes(fecha, precio, shape = tipo, colour = tipo)) + 
+                   geom_line(aes(group = tipo)) + 
+                   theme(legend.position = "top", axis.text.x = element_blank(),
+                         axis.ticks = element_blank(), axis.title.x = element_blank()) + 
+                   scale_x_date(labels = date_format("%Y"), breaks = "3 month") 
+```
+
+```{r}
+graficaBrent <- ggplot(df.brent, aes(fecha, precio, shape = tipo, colour = tipo)) + 
+                geom_line(aes(group = tipo)) + 
+                theme(legend.position = "top", axis.text.x = element_text(angle = 90)) + 
+                scale_x_date(labels = date_format("%Y-%b"), breaks = "3 month")
+```
+
+```{r fig.width=12, fig.height=8}
+grid.arrange(graficaGasolina, graficaBrent, ncol=1) 
+```
+
+Viendo las correlaciones de ambos tipos de combustible contra el barril Brent,
+se puede observar que es un 1% mayor con el Gasóleo que con la Gasolina 95 
+
+```{r}
+cor(combustibles[combustibles$tipo == 95, c('precio')], df.brent$precio)
+cor(combustibles[combustibles$tipo == 'GASOLEO_A', c('precio')], df.brent$precio)
+```
+
+# Comparativa de precios Comunidad de Madrid
+
+Descargamos el fichero de datos con los datos de ambos combustibles de la comunidad y creamos el dataframe
+
+[Fuente](http://geoportalgasolineras.es)
+
+```{r}
+precMedio.gasoleo <- read.xls(precios.medios.path, sheet = "promedio_gasoleo", header = TRUE, 
+                              colClasses = c("Provincia" = "character", "Localidad" = "character",
+                                             "TIPO" = "character", "GEOCODIGO" = "character"),
+                              stringsAsFactors = FALSE)
+
+#Limpiamos columnas sobrantes
+DatosGasoleo <- precMedio.gasoleo[,1:5] 
+```
+
+Muestra de los datos del Gasóleo
+
+```{r}
+head(DatosGasoleo)
+```
+
+```{r}
+precMedio.gasolina <- read.xls(precios.medios.path, sheet = "promedio_gasolina", header = TRUE, 
+                               colClasses=c("Provincia" = "character", "Localidad" = "character",
+                                            "TIPO" = "character", "GEOCODIGO" = "character"),  
+                               stringsAsFactors = FALSE)
+
+#Limpiamos columnas sobrantes
+DatosGasolina <- precMedio.gasolina[,1:5]
+```
+
+Muestra de los datos de la Gasolina
+
+```{r}
+head(DatosGasolina)
+```
+
+Cargamos el shapefile con los datos geoespaciales de los municipios de Madrid
+
+```{r results='hide'}
+municipios <- readOGR(dsn = municipios.path, layer = municipios.shapefile)
+```
+
+Extraemos los datos geospatial a través de la función fortify de los municipios
+y hacemos el join con la parte @data de dicho objeto de clase SpatialPolygonsDataFrame
+
+```{r message=FALSE, warning=FALSE}
+municipios@data$id <- rownames(municipios@data)
+municipios.df <- fortify(municipios)
+municipios.df <- join(municipios.df, municipios@data, by="id")
+```
+
+Muestra de municipios.df
+
+```{r}
+head(municipios.df)
+```
+
+Unimos el dataframe municipios.df con los 2 anteriores dataframe que tienen
+los precios de la Gasolina y el Gasóleo por municipio
+
+```{r}
+municipios.df <- join(municipios.df, DatosGasolina, by = c('GEOCODIGO'), type = "inner")
+municipios.df <- join(municipios.df, DatosGasoleo, by = c('GEOCODIGO', 'Localidad', 'Provincia'), 
+                      type = 'inner')
+```
+
+Muestra del join resultante
+
+```{r}
+head(municipios.df)
+```
+
+# Gráfica
+
+```{r}
+plotGasolina <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) +
+                geom_polygon(aes(fill = PrecioGasolina)) +
+                theme(legend.position = "bottom", axis.ticks = element_blank(), 
+                      axis.text.x = element_blank(), axis.title.x = element_blank(), 
+                      axis.text.y = element_blank(), axis.title.y = element_blank()) +
+                labs(title="Precio medio Gasolina 95 por municipio") +
+                #geom_path(color="grey", linestyle=2) + # draw boundaries
+                coord_equal() +
+                scale_fill_gradient(low = "#F5FBEF", high = "#38610B", space = "Lab",
+                                    na.value = "grey50", guide = "colourbar")
+```
+
+```{r}
+plotGasoleo <- ggplot(data=municipios.df, aes(x=long, y=lat, group=group)) +
+               geom_polygon(aes(fill = PrecioGasoleo)) +
+               theme(legend.position = "bottom", axis.ticks = element_blank(), 
+                     axis.text.x = element_blank(), axis.title.x = element_blank(), 
+                     axis.text.y = element_blank(), axis.title.y = element_blank()) +
+               labs(title="Precio medio Gasoleo A por municipio") +
+               #geom_path(color="grey", linestyle=2) + # draw boundaries
+               coord_equal() +
+               scale_fill_gradient(low = "#FBEFEF", high = "#610B0B", space = "Lab", 
+                                   na.value = "grey50", guide = "colourbar")
+```
+
+```{r fig.width=12, fig.height=10}
+grid.arrange(plotGasolina, plotGasoleo, ncol=2)
+```
